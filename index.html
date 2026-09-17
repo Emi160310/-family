@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>クッキングアプリ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">毎日の食卓を楽しく</p>
+          <h1>クッキングアプリ</h1>
+        </div>
+        <div class="header-actions">
+          <button class="secondary-btn" id="manageRecipeBtn" type="button">レシピを管理</button>
+          <button class="primary-btn" id="randomRecipeBtn" type="button">今日のおすすめ</button>
+        </div>
+      </header>
+
+      <main class="content-layout">
+        <div class="main-panel">
+          <section class="hero-card">
+            <div class="hero-copy">
+              <span class="tag">季節のおすすめ</span>
+              <h2>手軽に作れて、家族が喜ぶ一皿</h2>
+              <p>
+                15分で作れる料理や、週末に作りたい定番メニューを見つけて、
+                すぐにおうちごはんを始めましょう。
+              </p>
+            </div>
+            <div class="hero-plate">
+              <div class="plate-icon">🍲</div>
+            </div>
+          </section>
+
+          <section class="toolbar">
+            <label class="search-box" aria-label="レシピ検索">
+              <span>🔎</span>
+              <input id="searchInput" type="text" placeholder="レシピ名や食材を検索" />
+            </label>
+
+            <div class="filter-group" id="categoryFilters" aria-label="カテゴリ絞り込み">
+              <button class="filter-btn active" type="button" data-category="all">全て</button>
+              <button class="filter-btn" type="button" data-category="和食">和食</button>
+              <button class="filter-btn" type="button" data-category="中華">中華</button>
+              <button class="filter-btn" type="button" data-category="イタリアン">イタリアン</button>
+              <button class="filter-btn" type="button" data-category="デザート">デザート</button>
+            </div>
+          </section>
+
+          <section class="results-header">
+            <h3>レシピ一覧</h3>
+            <span id="resultCount">0件</span>
+          </section>
+
+          <section id="recipeList" class="recipe-list" aria-live="polite"></section>
+        </div>
+
+        <aside class="side-panel">
+          <section class="panel-card">
+            <div class="panel-header">
+              <h4>家族の好きな料理</h4>
+              <span id="favoriteBadge" class="badge">0</span>
+            </div>
+            <ul id="favoriteList" class="mini-list"></ul>
+          </section>
+
+          <section class="panel-card">
+            <div class="panel-header">
+              <h4>リクエストボード</h4>
+            </div>
+            <form id="requestForm" class="request-form">
+              <input name="requester" type="text" placeholder="家族の名前" required />
+              <input name="recipeName" type="text" placeholder="レシピ名" required />
+              <textarea name="message" rows="3" placeholder="希望のメモを書いてください"></textarea>
+              <button type="submit" class="primary-btn block-btn">リクエスト送信</button>
+            </form>
+            <ul id="requestList" class="request-list"></ul>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <template id="recipeCardTemplate">
+      <article class="recipe-card">
+        <button class="favorite-btn" type="button" aria-label="お気に入り追加">♡</button>
+        <div class="recipe-image"></div>
+        <div class="recipe-body">
+          <div class="meta-row">
+            <span class="category-tag"></span>
+            <span class="cook-time"></span>
+          </div>
+          <h4 class="recipe-title"></h4>
+          <p class="recipe-description"></p>
+          <div class="detail-row">
+            <span class="difficulty"></span>
+            <div class="card-actions">
+              <button class="mini-btn" type="button">詳細を見る</button>
+              <button class="icon-btn edit-btn" type="button" aria-label="編集">✏️</button>
+              <button class="icon-btn delete-btn" type="button" aria-label="削除">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <div id="recipeModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close="true"></div>
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="recipeModalTitle">
+        <div class="modal-header">
+          <h3 id="recipeModalTitle">レシピ登録</h3>
+          <button class="close-btn" type="button" id="closeModalBtn" aria-label="閉じる">×</button>
+        </div>
+
+        <form id="recipeForm" class="recipe-form">
+          <input type="hidden" name="id" />
+
+          <label>
+            <span>料理名</span>
+            <input name="title" type="text" required />
+          </label>
+
+          <div class="two-col">
+            <label>
+              <span>カテゴリ</span>
+              <select name="category" required>
+                <option value="和食">和食</option>
+                <option value="中華">中華</option>
+                <option value="イタリアン">イタリアン</option>
+                <option value="デザート">デザート</option>
+              </select>
+            </label>
+
+            <label>
+              <span>時間</span>
+              <input name="time" type="text" placeholder="例: 20分" required />
+            </label>
+          </div>
+
+          <div class="two-col">
+            <label>
+              <span>難易度</span>
+              <select name="difficulty" required>
+                <option value="初級">初級</option>
+                <option value="中級">中級</option>
+                <option value="上級">上級</option>
+              </select>
+            </label>
+
+            <label>
+              <span>アイコン</span>
+              <input name="icon" type="text" value="🍽️" maxlength="2" required />
+            </label>
+          </div>
+
+          <label>
+            <span>説明</span>
+            <textarea name="description" rows="4" required></textarea>
+          </label>
+
+          <div class="modal-actions">
+            <button type="button" class="secondary-btn" id="cancelRecipeBtn">キャンセル</button>
+            <button type="submit" class="primary-btn">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
