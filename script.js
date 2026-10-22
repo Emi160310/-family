@@ -12,6 +12,9 @@ const seedRecipes = [
     time: "15分",
     difficulty: "初級",
     description: "ふわっとした卵とおかず野菜を合わせた、朝食にぴったりの定番料理です。",
+    servings: 2,
+    ingredients: "卵: 3個\nだし: 大さじ2\n砂糖: 小さじ1\n塩: 少々",
+    instructions: "1. 卵を溶き、だしと調味料を混ぜます。\n2. 卵焼き器で数回に分けて焼き、巻きます。\n3. 食べやすく切って盛り付けます。",
     icon: "🍳",
     color: "linear-gradient(135deg, #ffe8a8, #ffbb57 58%, #f29b2e)"
   },
@@ -22,6 +25,9 @@ const seedRecipes = [
     time: "20分",
     difficulty: "中級",
     description: "キムチのピリッとした香りと豚肉のうまみが広がる一品です。",
+    servings: 2,
+    ingredients: "豚肉: 200g\nキムチ: 150g\nごま油: 大さじ1\nねぎ: 適量",
+    instructions: "1. 豚肉を食べやすい大きさに切ります。\n2. フライパンで豚肉を炒め、火が通ったらキムチを加えます。\n3. 調味料で味を整え、ねぎを散らします。",
     icon: "🥢",
     color: "linear-gradient(135deg, #f9d9ba, #f59b7d 50%, #d96347)"
   },
@@ -32,6 +38,9 @@ const seedRecipes = [
     time: "25分",
     difficulty: "初級",
     description: "ガーリックとトマトの香りで、シンプルなのに満足感のあるパスタです。",
+    servings: 2,
+    ingredients: "パスタ: 200g\nトマトソース: 300g\nにんにく: 1片\nオリーブオイル: 大さじ1",
+    instructions: "1. パスタを表示時間どおりにゆでます。\n2. にんにくを炒め、トマトソースを加えて煮ます。\n3. パスタをソースと和えて盛り付けます。",
     icon: "🍝",
     color: "linear-gradient(135deg, #f7d3b2, #f58d66 55%, #d24e34)"
   },
@@ -42,6 +51,9 @@ const seedRecipes = [
     time: "10分",
     difficulty: "初級",
     description: "甘酸っぱくて軽い食感の、簡単に作れるデザートです。",
+    servings: 2,
+    ingredients: "いちご: 6個\nヨーグルト: 200g\nグラノーラ: 40g",
+    instructions: "1. いちごを食べやすい大きさに切ります。\n2. 器にヨーグルトとグラノーラを重ねます。\n3. いちごを飾って完成です。",
     icon: "🍓",
     color: "linear-gradient(135deg, #ffd5e5, #ff9ec1 55%, #db5d8c)"
   },
@@ -52,6 +64,9 @@ const seedRecipes = [
     time: "35分",
     difficulty: "中級",
     description: "家庭で作る定番カレー。とろみのあるスープがご飯とよく合います。",
+    servings: 2,
+    ingredients: "鶏肉: 200g\n玉ねぎ: 1個\nにんじん: 1/2本\nカレールウ: 2皿分\n水: 300ml",
+    instructions: "1. 鶏肉と野菜を食べやすい大きさに切ります。\n2. 鍋で具材を炒め、水を加えて煮込みます。\n3. 火を止めてルウを溶かし、再び煮込んでご飯にかけます。",
     icon: "🍛",
     color: "linear-gradient(135deg, #fbe6b3, #efb063 60%, #d77b33)"
   },
@@ -62,6 +77,9 @@ const seedRecipes = [
     time: "18分",
     difficulty: "中級",
     description: "海老のぷりっとした食感と、甘辛いソースがとても魅力的です。",
+    servings: 2,
+    ingredients: "海老: 200g\n片栗粉: 大さじ1\nチリソース: 大さじ3\nねぎ: 適量",
+    instructions: "1. 海老の下処理をして、片栗粉をまぶします。\n2. 海老を焼いて取り出します。\n3. ソースを煮立て、海老を戻して全体を絡めます。",
     icon: "🦐",
     color: "linear-gradient(135deg, #ffd9bd, #ff9f7c 58%, #d85348)"
   }
@@ -73,20 +91,53 @@ const searchInput = document.getElementById("searchInput");
 const resultCount = document.getElementById("resultCount");
 const randomRecipeBtn = document.getElementById("randomRecipeBtn");
 const categoryFilters = document.getElementById("categoryFilters");
+const heroSlider = document.getElementById("heroSlider");
+const heroSlides = Array.from(document.querySelectorAll(".hero-slide"));
 const favoriteList = document.getElementById("favoriteList");
 const favoriteBadge = document.getElementById("favoriteBadge");
 const requestForm = document.getElementById("requestForm");
 const requestList = document.getElementById("requestList");
 const recipeModal = document.getElementById("recipeModal");
 const recipeForm = document.getElementById("recipeForm");
+const detailModal = document.getElementById("detailModal");
+const detailContent = document.getElementById("detailContent");
+const favoriteModal = document.getElementById("favoriteModal");
+const favoriteForm = document.getElementById("favoriteForm");
+const favoriteNameInput = document.getElementById("favoriteNameInput");
+const recipeImageInput = document.getElementById("recipeImageInput");
 const manageRecipeBtn = document.getElementById("manageRecipeBtn");
 const closeModalBtn = document.getElementById("closeModalBtn");
 const cancelRecipeBtn = document.getElementById("cancelRecipeBtn");
+const closeDetailModalBtn = document.getElementById("closeDetailModalBtn");
+const closeFavoriteModalBtn = document.getElementById("closeFavoriteModalBtn");
+const cancelFavoriteBtn = document.getElementById("cancelFavoriteBtn");
 
 let recipes = JSON.parse(localStorage.getItem(STORAGE_KEYS.recipes) || "null") || seedRecipes;
 let favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.favorites) || "[]");
 let requests = JSON.parse(localStorage.getItem(STORAGE_KEYS.requests) || "[]");
 let selectedCategory = "all";
+
+recipes = recipes.map((recipe) => {
+  const seedRecipe = seedRecipes.find((item) => item.id === recipe.id);
+  return {
+    ...recipe,
+    instructions: recipe.instructions || seedRecipe?.instructions || "",
+    servings: recipe.servings || seedRecipe?.servings || 2,
+    ingredients: recipe.ingredients ?? seedRecipe?.ingredients ?? ""
+  };
+});
+
+function normalizeFavorites() {
+  favorites = favorites.map((item) => {
+    if (typeof item === "number") {
+      return { recipeId: item, name: "家族" };
+    }
+    return {
+      recipeId: item.recipeId,
+      name: item.name || "家族"
+    };
+  });
+}
 
 function saveRecipes() {
   localStorage.setItem(STORAGE_KEYS.recipes, JSON.stringify(recipes));
@@ -100,21 +151,52 @@ function saveRequests() {
   localStorage.setItem(STORAGE_KEYS.requests, JSON.stringify(requests));
 }
 
-function renderFavorites() {
-  const favoriteRecipes = recipes.filter((recipe) => favorites.includes(recipe.id));
-  favoriteBadge.textContent = String(favoriteRecipes.length);
+function startHeroSlider() {
+  if (!heroSlider || !heroSlides.length) return;
 
-  if (!favoriteRecipes.length) {
+  let currentIndex = 0;
+
+  window.setInterval(() => {
+    currentIndex = (currentIndex + 1) % heroSlides.length;
+    heroSlides.forEach((slide, index) => {
+      slide.classList.toggle("active", index === currentIndex);
+    });
+  }, 2200);
+}
+
+function renderFavorites() {
+  normalizeFavorites();
+  const favoriteEntries = recipes
+    .map((recipe) => {
+      const names = favorites
+        .filter((item) => item.recipeId === recipe.id)
+        .map((item) => item.name);
+
+      if (!names.length) {
+        return null;
+      }
+
+      return {
+        recipe,
+        names
+      };
+    })
+    .filter(Boolean);
+
+  favoriteBadge.textContent = String(favoriteEntries.length);
+
+  if (!favoriteEntries.length) {
     favoriteList.innerHTML = "<li>まだお気に入りがありません</li>";
     return;
   }
 
-  favoriteList.innerHTML = favoriteRecipes
+  favoriteList.innerHTML = favoriteEntries
     .map(
-      (recipe) => `
+      ({ recipe, names }) => `
         <li>
           <strong>${recipe.icon} ${recipe.title}</strong><br />
-          ${recipe.category} / ${recipe.time}
+          ${recipe.category} / ${recipe.time}<br />
+          <span class="favorite-owner">いいね: ${names.join("、")}</span>
         </li>
       `
     )
@@ -127,19 +209,34 @@ function renderRequests() {
     return;
   }
 
-  requestList.innerHTML = requests
-    .slice()
-    .reverse()
-    .map(
-      (request) => `
+  const displayRequests = [...requests].reverse();
+
+  requestList.innerHTML = displayRequests
+    .map((request, index) => {
+      const actualIndex = requests.length - 1 - index;
+      return `
         <li>
-          <strong>${request.requester}</strong>さんのリクエスト<br />
-          ${request.recipeName}<br />
-          <small>${request.message || "メモなし"}</small>
+          <div class="request-item">
+            <div>
+              <strong>${request.requester}</strong>さんのリクエスト<br />
+              ${request.recipeName}<br />
+              <small>${request.message || "メモなし"}</small>
+            </div>
+            <button class="request-delete-btn" type="button" data-index="${actualIndex}">削除</button>
+          </div>
         </li>
-      `
-    )
+      `;
+    })
     .join("");
+
+  requestList.querySelectorAll(".request-delete-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.index);
+      requests.splice(index, 1);
+      saveRequests();
+      renderRequests();
+    });
+  });
 }
 
 function getFilteredRecipes() {
@@ -183,13 +280,20 @@ function renderRecipes() {
 
     image.style.background = recipe.color || "linear-gradient(135deg, #ffddae, #ffb36d 58%, #f38543)";
     image.textContent = recipe.icon || "🍽️";
+    if (recipe.image) {
+      image.style.backgroundImage = `url("${recipe.image}")`;
+      image.style.backgroundPosition = "center";
+      image.style.backgroundSize = "cover";
+      image.textContent = "";
+    }
     title.textContent = recipe.title;
     description.textContent = recipe.description;
     category.textContent = recipe.category;
     time.textContent = recipe.time;
     difficulty.textContent = `難易度: ${recipe.difficulty}`;
 
-    if (favorites.includes(recipe.id)) {
+    const myFavoriteEntries = favorites.filter((item) => item.recipeId === recipe.id);
+    if (myFavoriteEntries.length) {
       favoriteBtn.classList.add("active");
       favoriteBtn.textContent = "♥";
     } else {
@@ -197,21 +301,26 @@ function renderRecipes() {
     }
 
     favoriteBtn.addEventListener("click", () => {
-      const index = favorites.indexOf(recipe.id);
+      const hasFavorite = favorites.some((item) => item.recipeId === recipe.id);
 
-      if (index >= 0) {
-        favorites.splice(index, 1);
-      } else {
-        favorites.push(recipe.id);
+      if (hasFavorite) {
+        favorites = favorites.filter((item) => item.recipeId !== recipe.id);
+        saveFavorites();
+        renderFavorites();
+        renderRecipes();
+        return;
       }
 
-      saveFavorites();
-      renderFavorites();
-      renderRecipes();
+      const favoriteTarget = recipe;
+      favoriteNameInput.value = "";
+      favoriteForm.dataset.recipeId = String(favoriteTarget.id);
+      favoriteModal.classList.remove("hidden");
+      favoriteModal.setAttribute("aria-hidden", "false");
+      favoriteNameInput.focus();
     });
 
     card.querySelector(".mini-btn").addEventListener("click", () => {
-      alert(`${recipe.title}\n\n${recipe.description}\n\n時間: ${recipe.time}\n難易度: ${recipe.difficulty}`);
+      openDetailModal(recipe);
     });
 
     editBtn.addEventListener("click", () => openRecipeModal(recipe));
@@ -219,7 +328,7 @@ function renderRecipes() {
     deleteBtn.addEventListener("click", () => {
       if (window.confirm(`${recipe.title} を削除しますか？`)) {
         recipes = recipes.filter((item) => item.id !== recipe.id);
-        favorites = favorites.filter((id) => id !== recipe.id);
+        favorites = favorites.filter((item) => item.recipeId !== recipe.id);
         saveRecipes();
         saveFavorites();
         renderFavorites();
@@ -238,27 +347,158 @@ function openRecipeModal(recipe = null) {
   recipeModal.classList.remove("hidden");
   recipeModal.setAttribute("aria-hidden", "false");
 
+  const title = document.getElementById("recipeModalTitle");
+
   if (!recipe) {
+    title.textContent = "レシピ追加";
     recipeForm.reset();
     recipeForm.elements.id.value = "";
     recipeForm.elements.category.value = "和食";
     recipeForm.elements.difficulty.value = "初級";
     recipeForm.elements.icon.value = "🍽️";
+    recipeImageInput.value = "";
     return;
   }
 
+  title.textContent = "レシピ編集";
   recipeForm.elements.id.value = recipe.id;
   recipeForm.elements.title.value = recipe.title;
   recipeForm.elements.category.value = recipe.category;
   recipeForm.elements.time.value = recipe.time;
   recipeForm.elements.difficulty.value = recipe.difficulty;
   recipeForm.elements.icon.value = recipe.icon;
+  recipeImageInput.value = "";
   recipeForm.elements.description.value = recipe.description;
+  recipeForm.elements.servings.value = recipe.servings || 2;
+  recipeForm.elements.ingredients.value = recipe.ingredients || "";
+  recipeForm.elements.instructions.value = recipe.instructions || "";
 }
 
 function closeRecipeModal() {
   recipeModal.classList.add("hidden");
   recipeModal.setAttribute("aria-hidden", "true");
+}
+
+function openDetailModal(recipe) {
+  detailModal.classList.remove("hidden");
+  detailModal.setAttribute("aria-hidden", "false");
+
+  const owners = favorites
+    .filter((item) => item.recipeId === recipe.id)
+    .map((item) => item.name);
+
+  const instructions = recipe.instructions || "作り方はまだ登録されていません。編集画面から追加できます。";
+  const baseServings = Math.max(1, Number(recipe.servings) || 2);
+
+  detailContent.innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-icon detail-image">${recipe.icon || "🍽️"}</div>
+      <div>
+        <h4 class="detail-headline">${recipe.title}</h4>
+        <div class="detail-meta">
+          <span class="detail-chip">${recipe.category}</span>
+          <span class="detail-chip">${recipe.time}</span>
+          <span class="detail-chip">${recipe.difficulty}</span>
+        </div>
+      </div>
+    </div>
+    <p class="detail-text">${recipe.description}</p>
+    <section class="ingredients-section">
+      <div class="ingredients-header">
+        <h4 class="detail-section-title">材料</h4>
+        <label class="servings-control">
+          人数
+          <input class="detail-servings" type="number" min="1" max="100" value="${baseServings}" aria-label="何人分にするか" />
+          人分
+        </label>
+      </div>
+      <ul class="ingredient-list"></ul>
+    </section>
+    <section class="instructions-section">
+      <h4 class="detail-section-title">作り方</h4>
+      <p class="detail-text instructions-text">${instructions}</p>
+    </section>
+    <div class="detail-meta">
+      <span class="detail-chip">いいね: ${owners.length ? owners.join("、") : "まだなし"}</span>
+    </div>
+  `;
+
+  const servingsInput = detailContent.querySelector(".detail-servings");
+  servingsInput.addEventListener("input", () => {
+    const servings = Math.min(100, Math.max(1, Number(servingsInput.value) || 1));
+    renderDetailIngredients(recipe, servings);
+  });
+  renderDetailIngredients(recipe, baseServings);
+
+  const detailImage = detailContent.querySelector(".detail-image");
+  if (recipe.image) {
+    detailImage.style.backgroundImage = `url("${recipe.image}")`;
+    detailImage.style.backgroundPosition = "center";
+    detailImage.style.backgroundSize = "cover";
+    detailImage.textContent = "";
+  }
+}
+
+function closeDetailModal() {
+  detailModal.classList.add("hidden");
+  detailModal.setAttribute("aria-hidden", "true");
+}
+
+function closeFavoriteModal() {
+  favoriteModal.classList.add("hidden");
+  favoriteModal.setAttribute("aria-hidden", "true");
+  favoriteNameInput.value = "";
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+function formatIngredientLine(line, ratio) {
+  const match = line.match(/^\s*(.+?)\s*[:：]\s*(.*?)\s*$/);
+  if (!match) return escapeHtml(line);
+
+  const [, name, amount] = match;
+  const quantityMatch = amount.match(/^(\d+\/\d+|\d+(?:\.\d+)?)(.*)$/);
+  if (!quantityMatch) {
+    return `${escapeHtml(name)}: ${escapeHtml(amount)}`;
+  }
+
+  const [, quantity, unit] = quantityMatch;
+  const numericQuantity = quantity.includes("/")
+    ? (() => {
+        const [numerator, denominator] = quantity.split("/").map(Number);
+        return numerator / denominator;
+      })()
+    : Number(quantity);
+  const scaledQuantity = numericQuantity * ratio;
+  const displayQuantity = Number.isInteger(scaledQuantity)
+    ? String(scaledQuantity)
+    : String(Number(scaledQuantity.toFixed(2)));
+
+  return `${escapeHtml(name)}: ${displayQuantity}${escapeHtml(unit)}`;
+}
+
+function renderDetailIngredients(recipe, servings) {
+  const ingredients = (recipe.ingredients || "").split("\n").map((line) => line.trim()).filter(Boolean);
+  const list = detailContent.querySelector(".ingredient-list");
+
+  if (!ingredients.length) {
+    list.innerHTML = "<li>材料はまだ登録されていません。レシピを編集して追加できます。</li>";
+    return;
+  }
+
+  const baseServings = Math.max(1, Number(recipe.servings) || 2);
+  const ratio = servings / baseServings;
+  list.innerHTML = ingredients
+    .map((line) => `<li>${formatIngredientLine(line, ratio)}</li>`)
+    .join("");
 }
 
 searchInput.addEventListener("input", renderRecipes);
@@ -304,22 +544,50 @@ requestForm.addEventListener("submit", (event) => {
   requestForm.reset();
 });
 
-recipeForm.addEventListener("submit", (event) => {
+function readImageAsDataUrl(file) {
+  if (!file) return Promise.resolve("");
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(reader.result.toString()));
+    reader.addEventListener("error", reject);
+    reader.readAsDataURL(file);
+  });
+}
+
+recipeForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const formData = new FormData(recipeForm);
+  const currentId = Number(formData.get("id") || Date.now());
+  const existingRecipe = recipes.find((item) => item.id === currentId);
+  const imageFile = formData.get("imageFile");
+
+  if (imageFile instanceof File && imageFile.size > 5 * 1024 * 1024) {
+    window.alert("写真は5MB以内にしてください。");
+    return;
+  }
+
+  const selectedImage = imageFile instanceof File && imageFile.size
+    ? await readImageAsDataUrl(imageFile)
+    : existingRecipe?.image || "";
+
   const recipe = {
-    id: Number(formData.get("id") || Date.now()),
+    id: currentId,
     title: formData.get("title").toString().trim(),
     category: formData.get("category").toString(),
     time: formData.get("time").toString().trim(),
     difficulty: formData.get("difficulty").toString(),
     icon: formData.get("icon").toString().trim() || "🍽️",
     description: formData.get("description").toString().trim(),
+    servings: Number(formData.get("servings")),
+    ingredients: formData.get("ingredients").toString().trim(),
+    instructions: formData.get("instructions").toString().trim(),
+    image: selectedImage,
     color: "linear-gradient(135deg, #ffd9aa, #f3a55a 60%, #d06c2e)"
   };
 
-  if (!recipe.title || !recipe.time || !recipe.description) return;
+  if (!recipe.title || !recipe.time || !recipe.description || !recipe.instructions) return;
 
   const existingIndex = recipes.findIndex((item) => item.id === recipe.id);
 
@@ -334,12 +602,47 @@ recipeForm.addEventListener("submit", (event) => {
   renderRecipes();
 });
 
+favoriteForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const recipeId = Number(favoriteForm.dataset.recipeId);
+  const safeName = (favoriteNameInput.value || "家族").trim() || "家族";
+  const targetIndex = favorites.findIndex((item) => item.recipeId === recipeId && item.name === safeName);
+
+  if (targetIndex >= 0) {
+    favorites.splice(targetIndex, 1);
+  } else {
+    favorites.push({ recipeId, name: safeName });
+  }
+
+  saveFavorites();
+  renderFavorites();
+  renderRecipes();
+  closeFavoriteModal();
+});
+
 manageRecipeBtn.addEventListener("click", () => openRecipeModal());
 closeModalBtn.addEventListener("click", closeRecipeModal);
 cancelRecipeBtn.addEventListener("click", closeRecipeModal);
+closeDetailModalBtn.addEventListener("click", closeDetailModal);
+closeFavoriteModalBtn.addEventListener("click", closeFavoriteModal);
+cancelFavoriteBtn.addEventListener("click", closeFavoriteModal);
+
 recipeModal.addEventListener("click", (event) => {
   if (event.target.dataset.close === "true") {
     closeRecipeModal();
+  }
+});
+
+detailModal.addEventListener("click", (event) => {
+  if (event.target.dataset.closeDetail === "true") {
+    closeDetailModal();
+  }
+});
+
+favoriteModal.addEventListener("click", (event) => {
+  if (event.target.dataset.closeFavorite === "true") {
+    closeFavoriteModal();
   }
 });
 

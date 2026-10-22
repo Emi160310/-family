@@ -17,7 +17,7 @@
           <h1>クッキングアプリ</h1>
         </div>
         <div class="header-actions">
-          <button class="secondary-btn" id="manageRecipeBtn" type="button">レシピを管理</button>
+          <button class="secondary-btn" id="manageRecipeBtn" type="button">レシピ追加</button>
           <button class="primary-btn" id="randomRecipeBtn" type="button">今日のおすすめ</button>
         </div>
       </header>
@@ -27,14 +27,23 @@
           <section class="hero-card">
             <div class="hero-copy">
               <span class="tag">季節のおすすめ</span>
-              <h2>手軽に作れて、家族が喜ぶ一皿</h2>
-              <p>
-                15分で作れる料理や、週末に作りたい定番メニューを見つけて、
-                すぐにおうちごはんを始めましょう。
-              </p>
+              <h2>家族が喜ぶ一皿</h2>
             </div>
             <div class="hero-plate">
-              <div class="plate-icon">🍲</div>
+              <div id="heroSlider" class="hero-slider" aria-live="polite">
+                <div class="hero-slide active">
+                  <div class="plate-icon">🍲</div>
+                  <span class="slide-tag">定番ごはん</span>
+                </div>
+                <div class="hero-slide">
+                  <div class="plate-icon">🍜</div>
+                  <span class="slide-tag">手軽に満足</span>
+                </div>
+                <div class="hero-slide">
+                  <div class="plate-icon">🥗</div>
+                  <span class="slide-tag">彩りメニュー</span>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -113,7 +122,7 @@
       <div class="modal-backdrop" data-close="true"></div>
       <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="recipeModalTitle">
         <div class="modal-header">
-          <h3 id="recipeModalTitle">レシピ登録</h3>
+          <h3 id="recipeModalTitle">レシピ追加</h3>
           <button class="close-btn" type="button" id="closeModalBtn" aria-label="閉じる">×</button>
         </div>
 
@@ -122,7 +131,7 @@
 
           <label>
             <span>料理名</span>
-            <input name="title" type="text" required />
+            <input name="title" type="text" placeholder="例: オムライス" required />
           </label>
 
           <div class="two-col">
@@ -159,12 +168,69 @@
           </div>
 
           <label>
+            <span>料理の写真</span>
+            <input id="recipeImageInput" name="imageFile" type="file" accept="image/*" />
+            <small class="form-hint">写真を選ぶと、レシピ一覧と詳細画面に表示されます。</small>
+          </label>
+
+          <label>
             <span>説明</span>
-            <textarea name="description" rows="4" required></textarea>
+            <textarea name="description" rows="3" placeholder="料理の特徴やおすすめポイントを入力してください" required></textarea>
+          </label>
+
+          <div class="two-col">
+            <label>
+              <span>何人分のレシピ？</span>
+              <input name="servings" type="number" min="1" max="100" value="2" required />
+            </label>
+            <label>
+              <span>材料と分量</span>
+              <textarea name="ingredients" rows="5" placeholder="卵: 2個&#10;砂糖: 大さじ1&#10;塩: 少々"></textarea>
+              <small class="form-hint">「材料名: 数字＋単位」で1行ずつ入力すると、人数に合わせて分量を計算します。</small>
+            </label>
+          </div>
+
+          <label>
+            <span>作り方</span>
+            <textarea name="instructions" rows="6" placeholder="1. 材料を準備する&#10;2. 火にかけて調理する&#10;3. 盛り付ける" required></textarea>
           </label>
 
           <div class="modal-actions">
             <button type="button" class="secondary-btn" id="cancelRecipeBtn">キャンセル</button>
+            <button type="submit" class="primary-btn">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="detailModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close-detail="true"></div>
+      <div class="modal-dialog detail-dialog" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+        <div class="modal-header">
+          <h3 id="detailModalTitle">レシピ詳細</h3>
+          <button class="close-btn" type="button" id="closeDetailModalBtn" aria-label="閉じる">×</button>
+        </div>
+
+        <div id="detailContent" class="detail-content"></div>
+      </div>
+    </div>
+
+    <div id="favoriteModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close-favorite="true"></div>
+      <div class="modal-dialog small-dialog" role="dialog" aria-modal="true" aria-labelledby="favoriteModalTitle">
+        <div class="modal-header">
+          <h3 id="favoriteModalTitle">いいね</h3>
+          <button class="close-btn" type="button" id="closeFavoriteModalBtn" aria-label="閉じる">×</button>
+        </div>
+
+        <form id="favoriteForm" class="recipe-form">
+          <label>
+            <span>いいねした人</span>
+            <input id="favoriteNameInput" name="favoriteName" type="text" placeholder="例: りょう" required />
+          </label>
+
+          <div class="modal-actions">
+            <button type="button" class="secondary-btn" id="cancelFavoriteBtn">キャンセル</button>
             <button type="submit" class="primary-btn">保存</button>
           </div>
         </form>
