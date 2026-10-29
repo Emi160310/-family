@@ -1,7 +1,8 @@
 const STORAGE_KEYS = {
   recipes: "cookingAppRecipes",
   favorites: "cookingAppFavorites",
-  requests: "cookingAppRequests"
+  requests: "cookingAppRequests",
+  accounts: "cookingAppAccounts"
 };
 
 const seedRecipes = [
@@ -106,6 +107,32 @@ const favoriteForm = document.getElementById("favoriteForm");
 const favoriteNameInput = document.getElementById("favoriteNameInput");
 const recipeImageInput = document.getElementById("recipeImageInput");
 const manageRecipeBtn = document.getElementById("manageRecipeBtn");
+const authScreen = document.getElementById("authScreen");
+const appShell = document.getElementById("appShell");
+const authForm = document.getElementById("authForm");
+const authTitle = document.getElementById("authTitle");
+const authDescription = document.querySelector(".auth-description");
+const authSubmitBtn = document.getElementById("authSubmitBtn");
+const passwordInput = document.getElementById("passwordInput");
+const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+const authMessage = document.getElementById("authMessage");
+const authTabs = document.querySelector(".auth-tabs");
+const passwordResetPanel = document.getElementById("passwordResetPanel");
+const passwordResetForm = document.getElementById("passwordResetForm");
+const passwordResetMessage = document.getElementById("passwordResetMessage");
+const recoveryCodePanel = document.getElementById("recoveryCodePanel");
+const recoveryCodeOutput = document.getElementById("recoveryCodeOutput");
+const recoveryCodeSaved = document.getElementById("recoveryCodeSaved");
+const continueAfterRecoveryBtn = document.getElementById("continueAfterRecoveryBtn");
+const demoNotice = document.getElementById("demoNotice");
+const nameField = document.getElementById("nameField");
+const loginTab = document.getElementById("loginTab");
+const signupTab = document.getElementById("signupTab");
+const guestBtn = document.getElementById("guestBtn");
+const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
+const cancelPasswordResetBtn = document.getElementById("cancelPasswordResetBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const signedInUser = document.getElementById("signedInUser");
 const closeModalBtn = document.getElementById("closeModalBtn");
 const cancelRecipeBtn = document.getElementById("cancelRecipeBtn");
 const closeDetailModalBtn = document.getElementById("closeDetailModalBtn");
@@ -115,7 +142,9 @@ const cancelFavoriteBtn = document.getElementById("cancelFavoriteBtn");
 let recipes = JSON.parse(localStorage.getItem(STORAGE_KEYS.recipes) || "null") || seedRecipes;
 let favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.favorites) || "[]");
 let requests = JSON.parse(localStorage.getItem(STORAGE_KEYS.requests) || "[]");
+let accounts = JSON.parse(localStorage.getItem(STORAGE_KEYS.accounts) || "[]");
 let selectedCategory = "all";
+let isSignupMode = false;
 
 recipes = recipes.map((recipe) => {
   const seedRecipe = seedRecipes.find((item) => item.id === recipe.id);
@@ -501,6 +530,247 @@ function renderDetailIngredients(recipe, servings) {
     .join("");
 }
 
+function enterApp(name) {
+  sessionStorage.setItem("cookingAppUser", name);
+  signedInUser.textContent = `${name} さん`;
+  authScreen.hidden = true;
+  appShell.hidden = false;
+}
+
+function showAuthScreen() {
+  sessionStorage.removeItem("cookingAppUser");
+  appShell.hidden = true;
+  authScreen.hidden = false;
+}
+
+function saveAccounts() {
+  localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(accounts));
+}
+
+async function hashPassword(password, salt) {
+  const key = await window.crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const bits = await window.crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt, iterations: 120000 },
+    key,
+    256
+  );
+  return Array.from(new Uint8Array(bits), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function setPasswordVisibility(visible) {
+  passwordInput.type = visible ? "text" : "password";
+  togglePasswordBtn.classList.toggle("is-visible", visible);
+  togglePasswordBtn.setAttribute("aria-label", visible ? "パスワードを隠す" : "パスワードを表示");
+  togglePasswordBtn.setAttribute("aria-pressed", String(visible));
+}
+
+function showAuthPanel(panel) {
+  authTabs.hidden = panel !== "form";
+  authForm.hidden = panel !== "form";
+  passwordResetPanel.hidden = panel !== "reset";
+  recoveryCodePanel.hidden = panel !== "recovery";
+  demoNotice.hidden = panel !== "form";
+  guestBtn.hidden = panel !== "form";
+  authMessage.textContent = "";
+  passwordResetMessage.textContent = "";
+}
+
+function createRecoveryCode() {
+  const bytes = window.crypto.getRandomValues(new Uint8Array(16));
+  const code = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
+  return code.match(/.{1,8}/g).join("-");
+}
+
+async function addRecoveryCode(account) {
+  const recoveryCode = createRecoveryCode();
+  const recoverySalt = window.crypto.getRandomValues(new Uint8Array(16));
+  account.recoverySalt = Array.from(recoverySalt, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  account.recoveryHash = await hashPassword(recoveryCode.replace(/-/g, "").toLowerCase(), recoverySalt);
+  return recoveryCode;
+}
+
+function setAuthMode(signupMode) {
+  showAuthPanel("form");
+  isSignupMode = signupMode;
+  nameField.classList.toggle("hidden", !signupMode);
+  nameField.querySelector("input").required = signupMode;
+  authTitle.textContent = signupMode ? "アカウントを作成" : "おかえりなさい";
+  authSubmitBtn.textContent = signupMode ? "アカウントを作成" : "ログイン";
+  passwordInput.autocomplete = signupMode ? "new-password" : "current-password";
+  setPasswordVisibility(false);
+  document.querySelectorAll(".login-only").forEach((element) => {
+    element.hidden = signupMode;
+  });
+  authMessage.textContent = "";
+  loginTab.classList.toggle("active", !signupMode);
+  signupTab.classList.toggle("active", signupMode);
+  loginTab.setAttribute("aria-pressed", String(!signupMode));
+  signupTab.setAttribute("aria-pressed", String(signupMode));
+}
+
+function showRecoveryCode(code) {
+  authTitle.textContent = "復旧コードを保存";
+  authDescription.textContent = "パスワードを忘れたときに必要です。安全な場所に控えてください。";
+  recoveryCodeOutput.value = code;
+  recoveryCodeSaved.checked = false;
+  continueAfterRecoveryBtn.disabled = true;
+  showAuthPanel("recovery");
+}
+
+function hideRecoveryCode() {
+  recoveryCodeOutput.value = "";
+  recoveryCodeSaved.checked = false;
+  showAuthPanel("form");
+  authTitle.textContent = "おかえりなさい";
+  authDescription.textContent = "ログインして、今日のレシピを見つけましょう。";
+}
+
+togglePasswordBtn.addEventListener("click", () => {
+  setPasswordVisibility(passwordInput.type === "password");
+});
+
+forgotPasswordBtn.addEventListener("click", () => {
+  passwordResetForm.reset();
+  showAuthPanel("reset");
+  passwordResetForm.elements.email.value = authForm.elements.email.value.trim();
+  passwordResetForm.elements.email.focus();
+});
+
+cancelPasswordResetBtn.addEventListener("click", () => {
+  showAuthPanel("form");
+  passwordInput.focus();
+});
+
+recoveryCodeSaved.addEventListener("change", () => {
+  continueAfterRecoveryBtn.disabled = !recoveryCodeSaved.checked;
+});
+
+continueAfterRecoveryBtn.addEventListener("click", () => {
+  const name = recoveryCodePanel.dataset.accountName || "ユーザー";
+  hideRecoveryCode();
+  enterApp(name);
+});
+
+passwordResetForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const formData = new FormData(passwordResetForm);
+  const email = formData.get("email").toString().trim().toLowerCase();
+  const recoveryCode = formData.get("recoveryCode").toString().replace(/[^a-f0-9]/gi, "").toLowerCase();
+  const newPassword = formData.get("newPassword").toString();
+
+  passwordResetForm.querySelector('button[type="submit"]').disabled = true;
+  passwordResetMessage.textContent = "復旧コードを確認しています…";
+
+  try {
+    const account = accounts.find((item) => item.email === email);
+    if (!account || !account.recoverySalt || !account.recoveryHash) {
+      passwordResetMessage.textContent = "アカウントまたは復旧コードが確認できません。入力内容をご確認ください。";
+      return;
+    }
+
+    const recoverySalt = Uint8Array.from(account.recoverySalt.match(/.{2}/g), (byte) => Number.parseInt(byte, 16));
+    const recoveryHash = await hashPassword(recoveryCode, recoverySalt);
+    if (recoveryHash !== account.recoveryHash) {
+      passwordResetMessage.textContent = "アカウントまたは復旧コードが確認できません。入力内容をご確認ください。";
+      return;
+    }
+
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    account.salt = Array.from(salt, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    account.passwordHash = await hashPassword(newPassword, salt);
+    saveAccounts();
+    passwordResetForm.reset();
+    showAuthPanel("form");
+    setAuthMode(false);
+    authMessage.textContent = "パスワードを変更しました。新しいパスワードでログインしてください。";
+    authForm.elements.email.value = email;
+    passwordInput.focus();
+  } catch (error) {
+    passwordResetMessage.textContent = `再設定に失敗しました: ${error.message}`;
+  } finally {
+    passwordResetForm.querySelector('button[type="submit"]').disabled = false;
+  }
+});
+
+loginTab.addEventListener("click", () => setAuthMode(false));
+signupTab.addEventListener("click", () => setAuthMode(true));
+guestBtn.addEventListener("click", () => enterApp("ゲスト"));
+logoutBtn.addEventListener("click", showAuthScreen);
+
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const formData = new FormData(authForm);
+  const email = formData.get("email").toString().trim().toLowerCase();
+  const password = formData.get("password").toString();
+  const signupMode = isSignupMode;
+
+  authSubmitBtn.disabled = true;
+  loginTab.disabled = true;
+  signupTab.disabled = true;
+  authMessage.textContent = signupMode ? "アカウントを作成しています…" : "ログインしています…";
+
+  try {
+    if (signupMode) {
+      if (accounts.some((account) => account.email === email)) {
+        authMessage.textContent = "このメールアドレスは登録済みです。ログインしてください。";
+        return;
+      }
+
+      const salt = window.crypto.getRandomValues(new Uint8Array(16));
+      const name = formData.get("name").toString().trim();
+      const account = {
+        email,
+        name,
+        salt: Array.from(salt, (byte) => byte.toString(16).padStart(2, "0")).join(""),
+        passwordHash: await hashPassword(password, salt)
+      };
+      const recoveryCode = await addRecoveryCode(account);
+      accounts.push(account);
+      saveAccounts();
+      recoveryCodePanel.dataset.accountName = name;
+      showRecoveryCode(recoveryCode);
+      return;
+    }
+
+    const account = accounts.find((item) => item.email === email);
+    if (!account) {
+      authMessage.textContent = "アカウントが見つかりません。メールアドレスを確認するか、新規登録してください。";
+      return;
+    }
+
+    const salt = Uint8Array.from(account.salt.match(/.{2}/g), (byte) => Number.parseInt(byte, 16));
+    const passwordHash = await hashPassword(password, salt);
+    if (passwordHash !== account.passwordHash) {
+      authMessage.textContent = "パスワードが違います。入力内容をご確認ください。";
+      return;
+    }
+
+    if (!account.recoverySalt || !account.recoveryHash) {
+      const recoveryCode = await addRecoveryCode(account);
+      saveAccounts();
+      recoveryCodePanel.dataset.accountName = account.name || email.split("@")[0];
+      showRecoveryCode(recoveryCode);
+      return;
+    }
+
+    enterApp(account.name || email.split("@")[0]);
+  } catch (error) {
+    authMessage.textContent = `処理に失敗しました: ${error.message}`;
+  } finally {
+    authSubmitBtn.disabled = false;
+    loginTab.disabled = false;
+    signupTab.disabled = false;
+  }
+});
+
 searchInput.addEventListener("input", renderRecipes);
 
 categoryFilters.addEventListener("click", (event) => {
@@ -649,3 +919,8 @@ favoriteModal.addEventListener("click", (event) => {
 renderFavorites();
 renderRequests();
 renderRecipes();
+
+const currentUser = sessionStorage.getItem("cookingAppUser");
+if (currentUser) {
+  enterApp(currentUser);
+}

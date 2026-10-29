@@ -10,13 +10,103 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <main id="authScreen" class="auth-screen">
+      <section class="auth-card" aria-labelledby="authTitle">
+        <div class="auth-brand">
+          <span class="auth-logo" aria-hidden="true">🍳</span>
+          <p class="eyebrow">毎日の食卓を楽しく</p>
+          <h1 id="authTitle">おかえりなさい</h1>
+          <p class="auth-description">ログインして、今日のレシピを見つけましょう。</p>
+        </div>
+
+        <div class="auth-tabs" role="group" aria-label="アカウント操作">
+          <button id="loginTab" class="auth-tab active" type="button" aria-pressed="true">ログイン</button>
+          <button id="signupTab" class="auth-tab" type="button" aria-pressed="false">新規登録</button>
+        </div>
+
+        <form id="authForm" class="auth-form">
+          <label id="nameField" class="auth-field hidden">
+            <span>お名前</span>
+            <input name="name" type="text" autocomplete="name" placeholder="例: はなこ" />
+          </label>
+          <label class="auth-field">
+            <span>メールアドレス</span>
+            <input name="email" type="email" autocomplete="email" placeholder="example@email.com" required />
+          </label>
+          <div class="auth-field">
+            <label for="passwordInput">パスワード</label>
+            <div class="password-input-wrap">
+              <input id="passwordInput" name="password" type="password" autocomplete="current-password" placeholder="8文字以上" minlength="8" required />
+              <button id="togglePasswordBtn" class="password-toggle" type="button" aria-label="パスワードを表示" aria-pressed="false">
+                <svg class="password-eye" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg class="password-eye-off" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                  <path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a15.7 15.7 0 0 1-3.1 3.9M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.2 0 2.3-.2 3.3-.6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button id="forgotPasswordBtn" class="forgot-password-btn login-only" type="button">パスワードを忘れた場合</button>
+          <button id="authSubmitBtn" class="primary-btn auth-submit" type="submit">デモとしてログイン</button>
+          <p id="authMessage" class="auth-message" role="status" aria-live="polite"></p>
+        </form>
+
+        <section id="passwordResetPanel" class="auth-extra-panel" hidden aria-labelledby="passwordResetTitle">
+          <h2 id="passwordResetTitle">パスワードを再設定</h2>
+          <p class="auth-extra-description">登録したメールアドレスと、新規登録時に控えた復旧コードを入力してください。</p>
+          <form id="passwordResetForm" class="auth-form">
+            <label class="auth-field">
+              <span>メールアドレス</span>
+              <input name="email" type="email" autocomplete="email" placeholder="example@email.com" required />
+            </label>
+            <label class="auth-field">
+              <span>復旧コード</span>
+              <input name="recoveryCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="登録時に表示されたコード" required />
+            </label>
+            <label class="auth-field">
+              <span>新しいパスワード</span>
+              <input name="newPassword" type="password" autocomplete="new-password" placeholder="8文字以上" minlength="8" required />
+            </label>
+            <button class="primary-btn auth-submit" type="submit">パスワードを再設定</button>
+            <p id="passwordResetMessage" class="auth-message" role="status" aria-live="polite"></p>
+            <button id="cancelPasswordResetBtn" class="auth-back-btn" type="button">ログインに戻る</button>
+          </form>
+        </section>
+
+        <section id="recoveryCodePanel" class="auth-extra-panel" hidden aria-labelledby="recoveryCodeTitle">
+          <h2 id="recoveryCodeTitle">復旧コードを控えてください</h2>
+          <p class="auth-extra-description">パスワードを忘れたときに必要です。このコードは今回だけ表示されます。安全な場所に保存してください。</p>
+          <label class="auth-field recovery-code-field">
+            <span>あなたの復旧コード</span>
+            <input id="recoveryCodeOutput" type="text" readonly aria-label="復旧コード" />
+          </label>
+          <label class="recovery-confirm">
+            <input id="recoveryCodeSaved" type="checkbox" />
+            <span>復旧コードを控えました</span>
+          </label>
+          <button id="continueAfterRecoveryBtn" class="primary-btn auth-submit" type="button" disabled>アプリを開く</button>
+        </section>
+
+        <div id="demoNotice" class="demo-notice">
+          <span aria-hidden="true">💡</span>
+          <p>このブラウザーだけで使うデモ登録です。復旧コードも安全な場所に保管してください。</p>
+        </div>
+        <button id="guestBtn" class="guest-btn" type="button">ログインせずに試す →</button>
+      </section>
+    </main>
+
+    <div id="appShell" class="app-shell" hidden>
       <header class="topbar">
         <div>
           <p class="eyebrow">毎日の食卓を楽しく</p>
           <h1>クッキングアプリ</h1>
         </div>
         <div class="header-actions">
+          <span id="signedInUser" class="signed-in-user"></span>
+          <button class="secondary-btn" id="logoutBtn" type="button">ログアウト</button>
           <button class="secondary-btn" id="manageRecipeBtn" type="button">レシピ追加</button>
           <button class="primary-btn" id="randomRecipeBtn" type="button">今日のおすすめ</button>
         </div>
